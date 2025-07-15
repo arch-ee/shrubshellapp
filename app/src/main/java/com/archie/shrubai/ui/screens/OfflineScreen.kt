@@ -68,7 +68,7 @@ fun OfflineScreen(
                 
                 // Description
                 Text(
-                    text = "It looks like you don't have an internet connection. Please check your network settings and try again.",
+                    text = "ShrubAI requires an internet connection to function. Please check your network settings and try again.",
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
                     textAlign = TextAlign.Center,

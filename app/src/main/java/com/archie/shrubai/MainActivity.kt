@@ -7,12 +7,12 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.platform.LocalContext
 import com.archie.shrubai.ui.theme.ShrubaiTheme
 import com.archie.shrubai.ui.screens.*
+import com.archie.shrubai.network.NetworkManager
 import kotlinx.coroutines.delay
 
 class MainActivity : ComponentActivity() {
@@ -29,51 +29,57 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun MainContent() {
-    var screenState by remember { mutableStateOf(ScreenState.LOADING) }
+    val context = LocalContext.current
+    val networkManager = remember { NetworkManager(context) }
     
-    // Simulate loading and network check
+    var screenState by remember { mutableStateOf(ScreenState.LOADING) }
+    var networkType by remember { mutableStateOf("") }
+    val isConnected by networkManager.networkStatusFlow().collectAsState(initial = networkManager.isConnected())
+    
+    // Handle network status changes
+    LaunchedEffect(isConnected) {
+        if (screenState == ScreenState.CONTENT || screenState == ScreenState.OFFLINE) {
+            screenState = if (isConnected) {
+                networkType = networkManager.getNetworkType()
+                ScreenState.CONTENT
+            } else {
+                ScreenState.OFFLINE
+            }
+        }
+    }
+    
+    // Initial loading
     LaunchedEffect(Unit) {
-        delay(2000) // Simulate loading time
-        // Simulate network check - you can replace this with actual network logic
-        val isOnline = true // Change to false to test offline screen
-        screenState = if (isOnline) ScreenState.CONTENT else ScreenState.OFFLINE
+        delay(2000) // Show loading screen for 2 seconds
+        screenState = if (isConnected) {
+            networkType = networkManager.getNetworkType()
+            ScreenState.CONTENT
+        } else {
+            ScreenState.OFFLINE
+        }
     }
     
     when (screenState) {
         ScreenState.LOADING -> {
-            LoadingScreen(message = "Starting ShrubAI...")
+            LoadingScreen(message = "Starting up...")
         }
         ScreenState.OFFLINE -> {
             OfflineScreen(
                 onRetryClick = {
-                    screenState = ScreenState.LOADING
-                    // Simulate retry logic
+                    if (networkManager.isConnected()) {
+                        networkType = networkManager.getNetworkType()
+                        screenState = ScreenState.CONTENT
+                    }
                 }
             )
         }
         ScreenState.CONTENT -> {
             Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                Greeting(
-                    name = "ShrubAI",
-                    modifier = Modifier.padding(innerPadding)
+                MainScreen(
+                    modifier = Modifier.padding(innerPadding),
+                    networkType = networkType
                 )
             }
         }
-    }
-}
-
-@Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Welcome to $name!",
-        modifier = modifier
-    )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    ShrubaiTheme {
-        Greeting("ShrubAI")
     }
 }

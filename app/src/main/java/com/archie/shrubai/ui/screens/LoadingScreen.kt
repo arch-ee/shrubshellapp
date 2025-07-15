@@ -71,9 +71,9 @@ fun LoadingScreen(
                     modifier = Modifier
                         .size(40.dp)
                         .background(
-                            MaterialTheme.colorScheme.background,
-                            CircleShape
-                        )
+                MainScreen(
+                    modifier = Modifier.padding(innerPadding),
+                    networkType = networkType
                 )
             }
             
@@ -90,7 +90,7 @@ fun LoadingScreen(
             
             // Subtitle
             Text(
-                text = "Please wait while we prepare everything for you",
+                text = "Please wait while we initialize ShrubAI",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f),
                 textAlign = TextAlign.Center,
